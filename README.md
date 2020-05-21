@@ -29,6 +29,8 @@
 
 ## Основные файлы
 
+[`billing/models.py`](billing/models.py) - User and Payment models
+
 [`billing/user.py`](billing/user.py) - user API
 
 [`billing_tests/test_user.py`](billing_tests/test_user.py) - user tests

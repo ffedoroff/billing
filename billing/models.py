@@ -2,16 +2,19 @@ from sqlalchemy import (
     CheckConstraint,
     Column,
     DateTime,
-    FetchedValue,
     ForeignKey,
     Integer,
     String,
     column,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
 
 from billing.database import Base
+
+
+class NotEnoughFounds(Exception):
+    """Occurs when not enough founds on wallet."""
 
 
 class User(Base):
@@ -28,17 +31,32 @@ class User(Base):
     CheckConstraint(column("balance") >= 0)  # balance cannot be negative
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())
-    xmin = Column(
-        "xmin",
+    version_id = Column(
         Integer,
-        system=True,
-        server_default=FetchedValue(),
+        nullable=False,
         doc="that field prevent concurrent write / race condition",
-        # more info: https://docs.sqlalchemy.org/en/13/orm/versioning.html#server-side-version-counters
+        # more info: https://docs.sqlalchemy.org/en/13/orm/versioning.html#simple-version-counting
     )
-    __mapper_args__ = {"version_id_col": xmin, "version_id_generator": False}
-    last_payment_id = Column(Integer, ForeignKey("payment.id"), nullable=True)
-    last_payment = relationship("Payment", foreign_keys=[last_payment_id])
+    last_payment_id = Column(Integer, ForeignKey("payment.id", ondelete="CASCADE"))
+    last_payment = relationship(
+        "Payment", foreign_keys=[last_payment_id], post_update=True
+    )
+
+    __mapper_args__ = {"version_id_col": version_id}
+
+    @validates("last_payment")
+    def update_balance(self, key, value):
+        if value.debit == self or (self.id is not None and value.debit_id == self.id):
+            self.balance += value.amount
+        elif value.credit == self or (
+            self.id is not None and value.credit_id == self.id
+        ):
+            self.balance -= value.amount
+        else:
+            raise Exception("Should never occurs")
+        if self.balance < 0:
+            raise NotEnoughFounds()
+        return value
 
 
 class Payment(Base):
@@ -50,10 +68,10 @@ class Payment(Base):
     created = Column(DateTime(timezone=True), server_default=func.now())
     credit_id = Column(
         Integer,
-        ForeignKey("user.id"),
+        ForeignKey("user.id", ondelete="CASCADE"),
         nullable=True,
         doc="is Null when admin adds initial founds into system",
     )
     credit = relationship("User", foreign_keys=[credit_id])
-    debit_id = Column(Integer, ForeignKey("user.id"))
+    debit_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     debit = relationship("User", foreign_keys=[debit_id])

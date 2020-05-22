@@ -35,6 +35,7 @@ class User(Base):
         Integer,
         nullable=False,
         doc="that field prevent concurrent write / race condition",
+        default=0,
         # more info: https://docs.sqlalchemy.org/en/13/orm/versioning.html#simple-version-counting
     )
     last_payment_id = Column(Integer, ForeignKey("payment.id", ondelete="CASCADE"))
@@ -42,10 +43,11 @@ class User(Base):
         "Payment", foreign_keys=[last_payment_id], post_update=True
     )
 
-    __mapper_args__ = {"version_id_col": version_id}
+    # __mapper_args__ = {"version_id_col": version_id}
 
     @validates("last_payment")
     def update_balance(self, key, value):
+        """Main payment logic to check available amount."""
         if value.debit == self or (self.id is not None and value.debit_id == self.id):
             self.balance += value.amount
         elif value.credit == self or (

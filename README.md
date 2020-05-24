@@ -36,4 +36,5 @@
 [`billing_tests/test_user.py`](billing_tests/test_user.py) - user tests
 
 ## проверка конкурентной записи
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/963Zp8ocT1U" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

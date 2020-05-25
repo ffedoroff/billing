@@ -42,17 +42,20 @@
 ## Installation
 
 ```bash
+docker-compose up -d
+docker-compose run --rm web pytest
+```
+
+Проверьте, что сайт заработал http://0.0.0.0:8000/docs#/
+
+## Development run
+
+```bash
 pipenv --python 3.7
 pipenv shell
 pip install poetry
 poetry install
 poetry -V
 docker-compose up -d
-```
-
-Then you can open http://0.0.0.0:8000/docs#/
-
-```bash
-pytest
-python main.py
+docker-compose run --rm web pytest
 ```

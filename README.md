@@ -38,3 +38,21 @@
 ## Проверка конкурентной записи
 
 [![проверка конкурентной записи](https://img.youtube.com/vi/963Zp8ocT1U/0.jpg)](https://www.youtube.com/watch?v=963Zp8ocT1U)
+
+## Installation
+
+```bash
+pipenv --python 3.7
+pipenv shell
+pip install poetry
+poetry install
+poetry -V
+docker-compose up -d
+```
+
+Then you can open http://0.0.0.0:8000/docs#/
+
+```bash
+pytest
+python main.py
+```

@@ -12,4 +12,12 @@ services:
   adminer:
     image: adminer
     ports:
-      - 8080:8080
+      - 8001:8000
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn main:app --host=0.0.0.0
+    ports:
+      - 8000:8000
